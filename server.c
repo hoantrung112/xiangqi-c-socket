@@ -232,7 +232,7 @@ void *handle_client(void *arg)
         }
         else
         {
-            printf("ERROR: -1\n");
+            print_err("Something went wrong");
             leave_flag = 1;
         }
 
@@ -311,7 +311,7 @@ int main(int argc, char **argv)
     printf("----------------------------------------------\n");
     printf("-- Xiangqi playground running on port: %d --\n", PORT);
     printf("----------------------------------------------\n\n");
-    importTextFile("database.txt");
+    importTextFile("main_storage.txt");
     traversingList2(root2);
     while (1)
     {

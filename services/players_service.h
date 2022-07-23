@@ -263,7 +263,7 @@ int getLine2(char *filename, char *name)
 void saveData1(Player ele)
 {
     // update file path
-    int line = getLine2("database.txt", ele.name);
+    int line = getLine2("main_storage.txt", ele.name);
     FILE *fPtr;
     FILE *fTemp;
     char path[100];
@@ -290,7 +290,7 @@ void saveData1(Player ele)
     strcat(newline, "\n");
 
     /*  Open all required files */
-    fPtr = fopen("database.txt", "r");
+    fPtr = fopen("main_storage.txt", "r");
     fTemp = fopen("replace.tmp", "w");
 
     /* fopen() return NULL if unable to open file in given mode. */
@@ -323,10 +323,10 @@ void saveData1(Player ele)
     fclose(fTemp);
 
     /* Delete original source file */
-    remove("database.txt");
+    remove("main_storage.txt");
 
     /* Rename temporary file as original file */
-    rename("replace.tmp", "database.txt");
+    rename("replace.tmp", "main_storage.txt");
 
     printf("\nSuccessfully replaced '%d' line with '%s'.", line, newline);
 }
@@ -343,7 +343,7 @@ void append(char *str)
     printf(" Input the file name to be opened : ");
 
     // pthread_mutex_lock(&file_mutex);
-    fptr3 = fopen("database.txt", "a");
+    fptr3 = fopen("main_storage.txt", "a");
     printf(" Input the number of lines to be written : ");
     // scanf("%d", &n);
     printf(" The lines are : \n");

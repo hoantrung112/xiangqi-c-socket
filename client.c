@@ -14,6 +14,7 @@
 #include <sys/types.h>
 
 #include "config/constants.h"
+#include "utils/message.h"
 #include "utils/stdio_helper.h"
 #include "auth_server/encryption.h"
 
@@ -411,12 +412,12 @@ void menu()
 {
     printf("[COMMANDS]:\n");
     printf("\t <list>\t\t\t  List all Xiangqi rooms\n");
-    printf("\t <create>\t\t   Normal Room\n");
+    printf("\t <create>\t\t   Casual Room\n");
     printf("\t <create rank>\t\t  Ranked room\n");
-    printf("\t <join>\t\t  Join in one Xiangqi room\n");
-    printf("\t <leave>\t\t\t  Back of the one Xiangqi room\n");
-    printf("\t <start>\t\t\t  Starts one Xiangqi game\n");
-    printf("\t <login>\t\t\t  Logged in to save your account\n");
+    printf("\t <join>\t\t  Join in a Xiangqi room\n");
+    printf("\t <leave>\t\t\t  Leave Xiangqi room\n");
+    printf("\t <start>\t\t\t  Start a Xiangqi game\n");
+    printf("\t <login>\t\t\t  Log in \n");
     printf("\t <signup>\t\t  Dont' have an account? Register\n");
     printf("\t <exit>\t\t\t  Close terminal\n\n");
 }
@@ -426,24 +427,23 @@ void logged_menu()
     printf("\t <list>\t\t\t  List all Xiangqi rooms\n");
     printf("\t <create>\t\t   Normal Room\n");
     printf("\t <create rank>\t\t  Ranked room\n");
-    printf("\t <join>\t\t  Join in one Xiangqi room\n");
-    printf("\t <leave>\t\t\t  Back of the one Xiangqi room\n");
-    printf("\t <start>\t\t\t  Starts one Xiangqi game\n");
-    printf("\t <logout>\t\t  Starts one Xiangqi game\n\n");
+    printf("\t <join>\t\t  Join in a Xiangqi room\n");
+    printf("\t <leave>\t\t\t  Leave Xiangqi room\n");
+    printf("\t <start>\t\t\t  Start a Xiangqi game\n");
+    printf("\t <logout>\t\t  Log out\n\n");
 }
 void selectMode()
 {
 
-    printf("guest  -login as guest\n");
-    printf("login  -signin\n");
-    printf("signup -register new account\n\n");
+    printf("<guest>  -login as guest\n");
+    printf("<login>  -signin\n");
+    printf("<signup> -register new account\n\n");
 }
 void recv_msg_handler()
 {
     char message[BUFF_SIZE] = {};
     char rep[BUFF_SIZE] = {};
     char status[100];
-    // response res;
     flashScreen();
 
     while (1)
@@ -452,17 +452,15 @@ void recv_msg_handler()
         int receive = recv(sockfd, rep, BUFF_SIZE, 0);
         strcpy(status, strtok(rep, "|"));
         strcpy(message, strtok(NULL, "|"));
-        // int receive = recv(sockfd, &res, sizeof(res), 0);
-        // strcpy(message, message);
         if (receive > 0)
         {
             if (strcmp(status, "SELECT_MODE") == 0)
-            { // TODO: THEM BIEN IS LOGIN DE THAY DOI TERMINAL
+            { 
                 selectMode();
                 str_overwrite_stdout();
             }
             else if (strcmp(status, "MENU") == 0 || strcmp(status, "GAME_OVER") == 0)
-            { // TODO:
+            { 
 
                 menu();
                 str_overwrite_stdout();
@@ -470,8 +468,6 @@ void recv_msg_handler()
             else if (strcmp(status, "START_1") == 0)
             {
                 pthread_cancel(lobby_thread);
-                // pthread_kill(recv_msg_thread, SIGUSR1);
-
                 player = 1;
                 if (pthread_create(&multiplayer_game, NULL, (void *)multiplayerGame, NULL) != 0)
                 {
@@ -480,14 +476,10 @@ void recv_msg_handler()
                 }
                 pthread_detach(pthread_self());
                 pthread_cancel(recv_msg_thread);
-
-                // pthread_kill(lobby_thread, SIGUSR1);
             }
             else if (strcmp(status, "START_2") == 0)
             {
                 pthread_cancel(lobby_thread);
-                // pthread_kill(recv_msg_thread, SIGUSR1);
-
                 player = 2;
                 if (pthread_create(&multiplayer_game, NULL, (void *)multiplayerGame, NULL) != 0)
                 {
@@ -496,13 +488,11 @@ void recv_msg_handler()
                 }
                 pthread_detach(pthread_self());
                 pthread_cancel(recv_msg_thread);
-
-                // pthread_kill(lobby_thread, SIGUSR1);
             }
-            else if (strcmp(status, "LGIN_SUCC") == 0) // login thanh cong
+            else if (strcmp(status, "LGIN_SUCC") == 0) 
             {
 
-                printf("Login Successful\n");
+                printf("Logged in successfully!\n");
                 strcpy(username, name);
                 strcpy(name, message);
                 flashScreen();
@@ -512,7 +502,7 @@ void recv_msg_handler()
             }
             else if (strcmp(status, "LOGOUT_SUCC") == 0)
             {
-                printf(">Good bye %s\n", username);
+                printf(">Until next time %s\n", username);
                 strcpy(username, "");
                 strcpy(name, username);
                 sleep(1);
@@ -531,7 +521,6 @@ void recv_msg_handler()
             }
             else
             {
-                // printf("%s---%s", status,message);
                 printf("[%s]-[SERVER] %s", status, message);
                 str_overwrite_stdout();
             }
@@ -546,7 +535,7 @@ void recv_msg_handler()
 int conectGame(char *ip, int port)
 {
     setbuf(stdin, 0);
-    strcpy(name, "GO");
+    strcpy(name, "CONNECTED");
     struct sockaddr_in server_addr;
 
     // socket settings
@@ -559,7 +548,7 @@ int conectGame(char *ip, int port)
     int err = connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr));
     if (err == -1)
     {
-        printf("ERROR: connect\n");
+        print_err("Failed to connect");
         return EXIT_FAILURE;
     }
 
@@ -568,13 +557,13 @@ int conectGame(char *ip, int port)
 
     if (pthread_create(&lobby_thread, NULL, &lobby, NULL) != 0)
     {
-        printf("ERROR: pthread\n");
+        print_err("Pthread error");
         return EXIT_FAILURE;
     }
 
     if (pthread_create(&recv_msg_thread, NULL, (void *)recv_msg_handler, NULL) != 0)
     {
-        printf("ERROR: pthread\n");
+        print_err("Pthread error");
         return EXIT_FAILURE;
     }
 
@@ -582,7 +571,7 @@ int conectGame(char *ip, int port)
     {
         if (flag)
         {
-            printf("\nBye\n");
+            printf("\nUntil next time!\n");
             break;
         }
     }
@@ -602,12 +591,12 @@ void startScreen()
 
     while (option < 1 || option > 3)
     {
-        printf("Welcome to Tic Tac Toe");
+        printf("Welcome to Xiangqi playground");
         printf("\n1 - Play locally");
         printf("\n2 - Play online");
-        printf("\n3 - About");
+        printf("\n3 - About Xiangqi");
         printf("\n4 - Exit");
-        printf("\nChoose an option and press ENTER: ");
+        printf("\nMake your choice and hit ENTER: ");
 
         scanf("%d", &option);
 
@@ -626,12 +615,12 @@ void startScreen()
         case 3:
             flashScreen();
             option = 0;
-            printf("About the game!\n");
+            printf("How about googling? =))))\n");
             break;
         case 4:
             flashScreen();
             option = 0;
-            printf("You leave!\n");
+            printf("Until next time, dear!\n");
             exit(0);
             break;
         default:
