@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "stdio_helper.h": "c",
+        "client_game.h": "c"
+    }
+}
